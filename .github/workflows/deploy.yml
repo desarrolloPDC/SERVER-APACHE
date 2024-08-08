@@ -1,0 +1,33 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # O la rama que estés usando
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          # Instalar OpenSSH Client
+          sudo apt-get install -y openssh-client
+          
+          # Agregar clave privada SSH
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Configurar SSH para permitir conexión sin verificar la autenticidad del host
+          echo "Host *" >> ~/.ssh/config
+          echo "    StrictHostKeyChecking no" >> ~/.ssh/config
+
+          # Copiar archivo al servidor
+          scp -o StrictHostKeyChecking=no index.html ubuntu@34.201.143.73:/var/www/html/index.html
